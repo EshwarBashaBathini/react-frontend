@@ -1,0 +1,25 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build', '-t',
+        'europe-west1-docker.pkg.dev/liquid-tractor-464105-m0/frontend-repo/react-frontend',
+        '.'
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-west1-docker.pkg.dev/liquid-tractor-464105-m0/frontend-repo/react-frontend'
+      ]
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      [
+        'run', 'deploy', 'frontend-service',
+        '--image', 'europe-west1-docker.pkg.dev/liquid-tractor-464105-m0/frontend-repo/react-frontend',
+        '--region', 'europe-west1',
+        '--platform', 'managed',
+        '--allow-unauthenticated'
+      ]
