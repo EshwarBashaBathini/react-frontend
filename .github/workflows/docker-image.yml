@@ -1,0 +1,39 @@
+name: Deploy React Frontend to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+      - name: Build Docker Image
+        run: |
+          docker build -t europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/frontend-repo/react-frontend .
+
+      - name: Push Docker Image
+        run: |
+          docker push europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/frontend-repo/react-frontend
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy frontend-service \
+            --image=europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/frontend-repo/react-frontend \
+            --region=${{ secrets.GCP_REGION }} \
+            --platform=managed \
+            --allow-unauthenticated
